@@ -65,6 +65,8 @@ Confusion Matrix (Final Model)
   | :---    | :--  | :---   | 
    |**Actual Fraud** |	200	 | 150 | 
  | **Actual Legit**|	69	| 41061  | 
+
+ ![](https://raw.githubusercontent.com/steviecurran/fraud-detection-ml/refs/heads/main/results.png)
   
 **Interpretation**
   - High precision → low false alarm rate
@@ -72,6 +74,8 @@ Confusion Matrix (Final Model)
   - Suitable for real-world triage systems
 
 Note: Due to class imbalance, the normalized confusion matrix shows near-perfect true negatives. This reflects dataset composition rather than perfect model performance.
+
+![](https://raw.githubusercontent.com/steviecurran/fraud-detection-ml/refs/heads/main/metrics.png)
 
 **Key Insight**
 
