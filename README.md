@@ -60,7 +60,7 @@ The optimal threshold (~0.91) was selected to:
 **Evaluation**
 Confusion Matrix (Final Model)
 
- | | **Predicted Legit* | **Predicted Fraud** | 
+ | | **Predicted Legit**| **Predicted Fraud** | 
   | :---    | :--  | :---   | 
    |**Actual Legit** |	41061  | 69| 
  | **Actual Fraud**|	150	|   200| 
