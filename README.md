@@ -64,7 +64,7 @@ Confusion Matrix (Final Model)
   | | **Predicted Fraud** | **Predicted Legit** | 
   | :---    | :--  | :---   | 
    |**Actual Fraud** |	200	 | 150 | 
- | **Actual Legit**|	69	41061  | 
+ | **Actual Legit**|	69	| 41061  | 
   
 **Interpretation**
   - High precision → low false alarm rate
