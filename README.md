@@ -58,6 +58,7 @@ The optimal threshold (~0.91) was selected to:
   - Keep precision high for operational usability
 
 **Evaluation**
+
 Confusion Matrix (Final Model)
 
  | | **Predicted Legit**| **Predicted Fraud** | 
