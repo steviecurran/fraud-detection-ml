@@ -1,0 +1,11 @@
+.venv/
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*~
+\#*\#
+*-safe.py
+working/
+check_history.sh
+plan.txt
