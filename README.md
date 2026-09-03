@@ -12,16 +12,20 @@ Rather than optimising raw accuracy, the workflow focuses on the operational tra
 
 🚀 **Live app: [https://fraud-detection-workbench.streamlit.app](https://fraud-detection-workbench.streamlit.app)**
 
----
 
-## Key Results: Money Laundering Case Study
+## Key Results
+These figures are produced directly by the workbench's own evaluation
+workflow (see `pipeline.py`) — the same numbers and plots any user sees
+when running the built-in case study through the app.
 
-For the synthetic gambling AML dataset, XGBoost with class weighting produced approximately:
+For the synthetic gambling AML dataset, XGBoost with class weighting produced:
 
 - **Precision:** 20.0%
 - **Recall:** 25.3%
 - **F1 score:** 0.224
 - **Alert rate:** 1.90%
+- **ROC AUC:** 0.848
+- **PR AUC:** 0.118
 
 This means:
 
@@ -29,9 +33,11 @@ This means:
 - approximately 1 in 4 truly suspicious accounts are detected
 - around 1.9% of all accounts are sent for review
 
-This illustrates why accuracy alone is a poor metric for rare-event detection — and why, even with real signal in the data (this dataset was validated to have genuine, learnable structure rather than noise), rare-event classification remains a fundamentally difficult, trade-off-driven problem rather than one with a "solved" answer.
+**Why these numbers are stronger than they first appear:** with a base rate of only 1.5% suspicious accounts, a model with no discriminative power would achieve roughly 1.5% precision — pure chance. The observed 20% precision represents a **13.3x lift over random selection**. The ROC AUC of 0.848 indicates the model separates suspicious from legitimate accounts substantially better than chance (0.5) across all possible thresholds, independent of any single operating point.
 
----
+Precision and recall are tied to one specific decision threshold; ROC AUC and PR AUC describe the model's overall discriminative power regardless of where that threshold is set — useful for judging the underlying model separately from the specific alert-rate trade-off chosen for this case study. PR AUC in particular is the more informative of the two for a problem this imbalanced, since ROC AUC can look deceptively strong even for weak rare-event classifiers; a PR AUC of 0.118 against a 1.5% base rate still represents genuine, meaningful lift, but it's an honest reminder of just how hard this problem is at this level of class imbalance.
+
+This illustrates why accuracy alone is a poor metric for rare-event detection — and why, even with real signal in the data (this dataset was validated to have genuine, learnable structure rather than noise), rare-event classification remains a fundamentally difficult, trade-off-driven problem rather than one with a "solved" answer.
 
 ## Interactive Workbench
 
@@ -144,6 +150,8 @@ Because the dataset is extremely imbalanced, the normalised confusion matrix con
 
 ---
 
+
+
 ## Key Insight
 
 **Real-world model performance is about trade-offs, not perfection.**
@@ -158,6 +166,7 @@ A useful rare-event classifier must balance:
 The appropriate threshold therefore depends not only on statistical performance, but also on the cost of false positives, false negatives and investigation capacity.
 
 ---
+
 
 ## Data
 
