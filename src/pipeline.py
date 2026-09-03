@@ -199,6 +199,8 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import precision_score,recall_score,f1_score,confusion_matrix
 from sklearn.metrics import precision_recall_curve,ConfusionMatrixDisplay,roc_curve,auc, average_precision_score
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression 
 from sklearn.svm import SVC
@@ -209,13 +211,14 @@ classifiers = {
     "Logistic Regression": LogisticRegression(C=0.08858667, solver='newton-cg'),
     "Support Vector": SVC(C=1, gamma=0.1,probability=True), 
     'XGBoost': XGBClassifier(n_estimators=500,max_depth=5,learning_rate=0.03,
-                             subsample=0.8,colsample_bytree=0.8,random_state=42)
+                             subsample=0.8,colsample_bytree=0.8,random_state=42),
+    'Gradient Boost': GradientBoostingClassifier(n_estimators=300,max_depth=3,
+                             learning_rate=0.05,random_state=42)
     }
 
-
 def ML(cl,desc,threshold,confidence,feature_importance,tuning,show_plot):   
-    #threshold = 0.5 # th1 + float(th2)/100
     classifier = classifiers.get(cl) 
+    fit_kwargs = {}
     if desc != "Class Weighting":
         classifier.set_params(class_weight=None)
         if desc == 'SMOTE':
@@ -224,16 +227,22 @@ def ML(cl,desc,threshold,confidence,feature_importance,tuning,show_plot):
             sampler = RandomUnderSampler(sampling_strategy='majority') 
         model = Pipeline([(desc,sampler),(cl, classifier)])
     else:
-        if cl != 'XGBoost':
-            classifier.set_params(class_weight='balanced')
-        else:
+        if cl == 'XGBoost':
             ratio = float(np.sum(y_train == 0) / np.sum(y_train == 1))
-            classifier.set_params(scale_pos_weight=ratio) 
-            #print('****blah****', classifier)
+            classifier.set_params(scale_pos_weight=ratio)
+        elif cl == 'Gradient Boost':
+            fit_kwargs['sample_weight'] = compute_sample_weight(
+                class_weight='balanced', y=y_train
+            )
+        else:
+            classifier.set_params(class_weight='balanced')
         desc = "class"
         model = classifier
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, **fit_kwargs)
     
+    y_prob = model.predict_proba(X_test)[:,1]
+
+ 
     y_prob = model.predict_proba(X_test)[:,1] 
     #the model’s estimated probability that a transaction is fraud
     if tuning != 'n':
@@ -378,7 +387,7 @@ def ML(cl,desc,threshold,confidence,feature_importance,tuning,show_plot):
 
     m,n,Z,s,CI = stats(non_probs)
     print("Non: %1.2f%% confidence, the mean is %1.2g +/- %1.2g (range of %1.2g to %1.2g)"
-              %(confidence,Z,CI,m-CI,m+CI))
+              %(confidence,m,CI,m-CI,m+CI))
 
     ax4.errorbar(m, y_numeric[1], xerr=CI, fmt='o', color='g', capsize=5, label= "$%1.3f\pm%1.3g$" %(m,CI))
 
@@ -418,4 +427,6 @@ def ML(cl,desc,threshold,confidence,feature_importance,tuning,show_plot):
         plt.legend(fontsize = 0.8*font,loc='upper right')    
         plt.show()
 
-ML('XGBoost','Class Weighting',threshold = 0.65,confidence = 95,feature_importance = 'n',tuning = 'n',show_plot = 'y') # threshold = 0.65 FROM tuning = 'y'
+#ML('XGBoost','Class Weighting',threshold = 0.65,confidence = 95,feature_importance = 'n',tuning = 'n',show_plot = 'y') # threshold = 0.65 FROM tuning = 'y'
+
+ML('Gradient Boost','Class Weighting',threshold = 0.76,confidence = 95,feature_importance = 'n',tuning = 'n',show_plot = 'y') # threshold = 0.76 FROM tuning = 'y'

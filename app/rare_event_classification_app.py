@@ -22,6 +22,8 @@ from sklearn.metrics import (
     recall_score,
     roc_curve,
 )
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from imblearn.pipeline import Pipeline
@@ -151,6 +153,8 @@ def prepare_xy(
 # ---------------------------------------------------------------------
 
 MODEL_NAMES = [
+    "Gradient Boost", # Since index=0 points at position 0 ("XGBoost"),
+                      #just reorder the list so Gradient Boost is first:
     "XGBoost",
     "Logistic Regression",
     "Decision Tree",
@@ -175,6 +179,17 @@ def build_classifier(model_name: str, class_ratio: float):
             n_jobs=2,
             eval_metric="logloss",
             scale_pos_weight=class_ratio,
+        )
+
+    if model_name == "Gradient Boost":
+        # GradientBoostingClassifier has no class_weight parameter --
+        # class balancing is applied via sample_weight at fit time
+        # instead (see fit_and_score_model below).
+        return GradientBoostingClassifier(
+            n_estimators=300,
+            max_depth=3,
+            learning_rate=0.05,
+            random_state=42,
         )
 
     if model_name == "Logistic Regression":
@@ -218,14 +233,14 @@ def fit_and_score_model(
         # Remove class weights when explicit resampling is used.
         if model_name == "XGBoost":
             classifier.set_params(scale_pos_weight=1.0)
-        else:
+        elif model_name != "Gradient Boost":
             classifier.set_params(class_weight=None)
         steps.append(("sampler", SMOTE(random_state=42)))
 
     elif imbalance_method == "Under-sampling":
         if model_name == "XGBoost":
             classifier.set_params(scale_pos_weight=1.0)
-        else:
+        elif model_name != "Gradient Boost":
             classifier.set_params(class_weight=None)
         steps.append(
             (
@@ -236,10 +251,19 @@ def fit_and_score_model(
                 ),
             )
         )
-
+    
     steps.append(("classifier", classifier))
     model = Pipeline(steps)
-    model.fit(X_train, y_train)
+
+    fit_params = {}
+    if model_name == "Gradient Boost" and imbalance_method == "Class weighting":
+        # Pipeline fit-param convention: "<step_name>__<param_name>"
+        fit_params["classifier__sample_weight"] = compute_sample_weight(
+            class_weight="balanced", y=y_train
+        )
+
+    model.fit(X_train, y_train, **fit_params)
+    
 
     y_prob = model.predict_proba(X_test)[:, 1]
 
@@ -883,10 +907,19 @@ with tabs[2]:
                 """
                 **XGBoost**  
                 An ensemble of decision trees built sequentially to improve prediction errors.
-                Often performs very well on structured tabular data and can model complex non-linear relationships.
+                Often performs very well on structured tabular data and can model complex
+                non-linear relationships.
+
+               **Gradient Boost**  
+                Similar in spirit to XGBoost — trees are added sequentially, each correcting
+                the previous
+                ensemble's errors. Achieves the strongest recall and PR AUC of the models
+                compared in this
+                workbench's case study, at the cost of a higher alert rate.
 
                **Logistic Regression**  
-               A simple, interpretable linear classifier that estimates the probability of the positive class.
+               A simple, interpretable linear classifier that estimates the probability of
+                the positive class.
                Useful as a strong baseline and when transparency matters.
 
                **Decision Tree**  
@@ -928,6 +961,13 @@ with tabs[2]:
             "The XGBoost settings match the notebook case study: 500 estimators, depth 5, "
             "learning rate 0.03, with class weighting selected by default."
         )
+    elif model_name == "Gradient Boost":
+        st.caption(
+            "The Gradient Boost settings match the notebook case study: 300 estimators, depth 3, "
+            "learning rate 0.05, with class balancing applied via sample weighting by default. "
+            "This configuration achieves the strongest documented result in this workbench "
+            "(recall ≈48% vs. XGBoost's ≈25%, at a comparable precision)."
+    )
 
     run_model = st.button("Run model", type="primary")
 
@@ -1118,9 +1158,12 @@ with tabs[3]:
             }
             table = raw_thresholds.rename(columns=rename_map)
             table = table[["threshold", "f1", "precision", "recall", "alert_rate"]]
+            
             st.info(
-                "Showing the precomputed XGBoost + class-weighting threshold sweep from the "
-                "notebook. Run a model in the Model Workbench to generate a new sweep live."
+                "Showing the precomputed Gradient Boost + class-weighting threshold sweep from the "
+                "notebook (the strongest documented result). Run a different model in Model "
+                "Workbench to generate a new sweep live."
+    
             )
         else:
             st.info("Run a model in **Model Workbench** to explore its threshold trade-offs.")
