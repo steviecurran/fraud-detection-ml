@@ -15,7 +15,7 @@ Rather than optimising raw accuracy, the workflow focuses on the operational tra
 
 ## Key Results
 These figures are produced directly by the workbench's own evaluation
-workflow (see `pipeline.py`) — the same numbers and plots any user sees
+workflow (see `src/pipeline.py`) — the same numbers and plots any user sees
 when running the built-in case study through the app.
 
 For the synthetic gambling AML dataset, XGBoost with class weighting produced:
