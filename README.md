@@ -197,8 +197,8 @@ For the money-laundering case study, the F1-maximising threshold for XGBoost is 
 
 | | **Predicted Legitimate** | **Predicted Suspicious** |
 |---|---:|---:|
-| **Actual Legitimate** | 4849 | 76 |
-| **Actual Suspicious** |  56  | 19 |
+| **Actual Legitimate** | TN = 4776 | FP = 149 |
+| **Actual Suspicious** | FN = 39 | TP = 36 |
 
 ![Confusion matrix](assets/images/results.png)
 
